@@ -432,58 +432,75 @@ const Dashboard = () => {
           {adminLoading ? (
             <p style={{ color: '#94a3b8' }}>Loading requests...</p>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
-                    <th style={{ padding: '12px' }}>Name</th>
-                    <th style={{ padding: '12px' }}>Email</th>
-                    <th style={{ padding: '12px' }}>Role</th>
-                    <th style={{ padding: '12px' }}>Approval Status</th>
-                    <th style={{ padding: '12px' }}>Payment Status</th>
-                    <th style={{ padding: '12px' }}>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allUsers.length > 0 ? allUsers.map((u) => (
-                    <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
-                      <td style={{ padding: '12px' }}>{u.name}</td>
-                      <td style={{ padding: '12px' }}>{u.email}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span style={{ background: '#334155', padding: '3px 8px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span>
-                      </td>
-                      <td style={{ padding: '12px', color: u.isApproved ? '#10b981' : '#f59e0b', fontWeight: 'bold' }}>
-                        {u.isApproved ? 'Approved' : 'Pending'}
-                      </td>
-                      <td style={{ padding: '12px', color: u.paymentStatus === 'Paid' ? '#10b981' : '#f87171', fontWeight: 'bold' }}>
-                        {u.paymentStatus}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        {!u.isApproved ? (
-                          <button 
-                            onClick={() => handleApproveAndPay(u._id)}
-                            style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginRight: '10px' }}
-                          >
-                            Approve
-                          </button>
-                        ) : (
-                          <span style={{ color: '#10b981', fontWeight: 'bold', marginRight: '10px' }}>Approved ✅</span>
-                        )}
-                        <button 
-                          onClick={() => handleBlockUser(u._id)}
-                          style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                        >
-                          Block
-                        </button>
-                      </td>
-                    </tr>
-                  )) : <tr><td colSpan="6" style={{ padding: '12px', color: '#94a3b8', textAlign: 'center' }}>No pending approval notifications.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+          <div style={{ overflowX: 'auto' }}>
+  <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
+    <thead>
+      <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
+        <th style={{ padding: '12px' }}>Name</th>
+        <th style={{ padding: '12px' }}>Email</th>
+        <th style={{ padding: '12px' }}>Role</th>
+        <th style={{ padding: '12px' }}>Approval Status</th>
+        <th style={{ padding: '12px' }}>Payment Status</th>
+        <th style={{ padding: '12px' }}>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {allUsers.length > 0 && allUsers.filter(u => u.status !== 'blocked' && !u.isBlocked).map((u) => (
+        <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
+          <td style={{ padding: '12px' }}>{u.name}</td>
+          <td style={{ padding: '12px' }}>{u.email}</td>
+          <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
+          <td style={{ padding: '12px', color: u.isApproved ? '#4ade80' : '#f87171' }}>{u.isApproved ? 'Approved' : 'Pending'}</td>
+          <td style={{ padding: '12px', color: '#4ade80' }}>{u.paymentStatus}</td>
+          <td style={{ padding: '12px' }}>
+            {!u.isApproved && (
+              <button onClick={() => handleAdminAction(u._id, 'approve')} style={{ background: '#22c55e', color: '#fff', marginRight: '8px', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Approve ✅</button>
+            )}
+            <button onClick={() => handleAdminAction(u._id, 'block')} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Block</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+{/* 🚫 ब्लॉक किए गए यूजर्स की नई टेबल (डार्क थीम मैचिंग) */}
+<div style={{ marginTop: '30px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
+  <h3 style={{ color: '#ef4444', marginBottom: '15px' }}>Blocked Users (ब्लॉक किए गए खाते)</h3>
+  {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).length === 0 ? (
+    <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No blocked users found.</p>
+  ) : (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
+            <th style={{ padding: '12px' }}>Name</th>
+            <th style={{ padding: '12px' }}>Email</th>
+            <th style={{ padding: '12px' }}>Role</th>
+            <th style={{ padding: '12px' }}>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).map((u) => (
+            <tr key={u._id} style={{ borderBottom: '1px solid #334155', background: '#2d1f2d' }}>
+              <td style={{ padding: '12px' }}>{u.name}</td>
+              <td style={{ padding: '12px' }}>{u.email}</td>
+              <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
+              <td style={{ padding: '12px' }}>
+                <button 
+                  onClick={() => handleAdminAction(u._id, 'approve')}
+                  style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  Unblock Account
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
 
       {selectedClientHistory && (
         <div style={styles.modalOverlay}>
