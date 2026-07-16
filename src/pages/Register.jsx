@@ -37,8 +37,8 @@ const Register = () => {
     };
 
     try {
-      await API.post('/auth/register', dataToSend);
-      setSuccess('Registration Successful!');
+      await API.post('/api/register', dataToSend);
+      setSuccess('Registration Successful! Waiting for Admin Approval.');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong.');
@@ -118,7 +118,7 @@ const styles = {
   form: { textAlign: 'left' },
   inputGroup: { marginBottom: '15px' },
   label: { display: 'block', marginBottom: '5px', fontSize: '13px', color: '#94a3b8' },
-  input: { width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #334155', background: '#1e293b', color: '#fff', boxSizing: 'border-box' },
+  input: { width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #334155', background: '#1e293b', color: '#fff', boxSizing: 'box' },
   passwordWrapper: { position: 'relative', display: 'flex', alignItems: 'center', width: '100%' },
   eyeButton: { position: 'absolute', right: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' },
   button: { width: '100%', padding: '10px', marginTop: '10px', borderRadius: '5px', border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer', fontWeight: 'bold' },

@@ -17,7 +17,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await API.post('/auth/login', formData);
+      const response = await API.post('/api/login', formData);
       
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('name', response.data.user?.name || ''); 
@@ -26,12 +26,7 @@ const Login = () => {
       localStorage.setItem('role', userRole);
       
       alert('Login Successful!');
-      
-      if (userRole === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
 
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Invalid email or password.';

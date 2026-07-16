@@ -26,15 +26,14 @@ const Dashboard = () => {
   const [allUsers, setAllUsers] = useState([]); 
   const [adminLoading, setAdminLoading] = useState(true);
 
-  const [companyName, setCompanyName] = useState('SK Finance'); 
+  const [companyName, setCompanyName] = useState('Anndata Agri Trading Company'); 
   const [currentFilter, setCurrentFilter] = useState('All'); 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; 
 
-  // 🟢 बैकएंड के स्ट्रक्चर के हिसाब से रास्ता बिल्कुल सेट कर दिया है
   const loadAllUsersForAdmin = async () => {
     try {
-      const res = await API.get('/auth/admin/users');
+      const res = await API.get('/api/admin/pending');
       setAllUsers(res.data);
       setAdminLoading(false);
     } catch (err) {
@@ -47,30 +46,14 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
       try {
-        const profileRes = await API.get('/auth/me');
+        const profileRes = await API.get('/api/profile');
         setUserRole(profileRes.data.role);
-        
-        // 🟢 अस्थायी कोड जो आपको सुपर एडमिन बनाएगा
-        if (profileRes.data && profileRes.data.role !== 'super_admin') {
-          try {
-            await API.put('/auth/admin/update-status/' + profileRes.data._id, {
-              role: 'super_admin',
-              isApproved: true,
-              paymentStatus: 'Paid'
-            });
-            alert("Role updated to Super Admin successfully! Page will now reload.");
-            window.location.reload();
-            return;
-          } catch (updateErr) {
-            console.error("Error setting super_admin role:", updateErr);
-          }
-        }
         
         if (profileRes.data.companyName) {
           setCompanyName(profileRes.data.companyName);
         }
         
-        if (profileRes.data.role === 'super_admin') {
+        if (profileRes.data.role === 'admin') {
           loadAllUsersForAdmin();
         }
 
@@ -88,7 +71,7 @@ const Dashboard = () => {
     const newName = prompt("Enter your Company/Business Name:", companyName);
     if (!newName) return;
     try {
-      await API.put('/auth/update-company', { companyName: newName });
+      await API.put('/api/update-company', { companyName: newName });
       setCompanyName(newName);
       alert('Business name updated successfully!');
     } catch (err) {
@@ -96,28 +79,26 @@ const Dashboard = () => {
     }
   };
 
-  // 🟢 अप्रूव बटन का रास्ता बिल्कुल ठीक कर दिया है
   const handleApproveAndPay = async (userId) => {
     try {
-      await API.put('/auth/admin/update-status/' + userId, {
-        isApproved: true,
-        paymentStatus: 'Paid'
+      await API.post('/api/admin/action', {
+        userId: userId,
+        action: 'approve'
       });
       
-      alert('User successfully approved and marked as Paid!');
+      alert('User successfully approved!');
       loadAllUsersForAdmin(); 
     } catch (err) {
       alert('Update failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
-  // 🟢 ब्लॉक बटन का रास्ता भी दुरुस्त कर दिया है
   const handleBlockUser = async (userId) => {
     if (window.confirm("Are you sure you want to block this user's access?")) {
         try {
-            await API.put('/auth/admin/update-status/' + userId, {
-                isApproved: false,       
-                paymentStatus: 'Unpaid'  
+            await API.post('/api/admin/action', {
+                userId: userId,
+                action: 'block'
             });
             
             alert('User access blocked successfully!');
@@ -130,16 +111,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const styleTag = document.createElement("style");
-    styleTag.innerHTML = `
-      @media (max-width: 768px) {
-        .desktop-table-view { display: none !important; }
-        .mobile-cards-view { display: flex !important; }
-      }
-      @media (min-width: 769px) {
-        .desktop-table-view { display: table !important; }
-        .mobile-cards-view { display: none !important; }
-      }
-    `;
+    styleTag.innerHTML = " @media (max-width: 768px) { .desktop-table-view { display: none !important; } .mobile-cards-view { display: flex !important; } } @media (min-width: 769px) { .desktop-table-view { display: table !important; } .mobile-cards-view { display: none !important; } } ";
     document.head.appendChild(styleTag);
   }, []);
 
@@ -305,7 +277,7 @@ const Dashboard = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <input type="text" placeholder="🔍 Search by name..." onChange={handleSearchChange} style={{...styles.input, width: '280px', margin: 0}} />
+        <input type="text" placeholder="Search by name..." onChange={handleSearchChange} style={{...styles.input, width: '280px', margin: 0}} />
         
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['All', 'Active', 'Cleared', 'Late'].map((filter) => (
@@ -353,7 +325,7 @@ const Dashboard = () => {
               <div key={c._id || c.id} style={styles.mobileCard}>
                 <div style={styles.cardHeader}>
                   <strong style={{fontSize: '18px'}}>{c.clientName}</strong>
-                  <button onClick={() => setSelectedClientHistory(c)} style={styles.histBtn}>⏱️ History</button>
+                  <button onClick={() => setSelectedClientHistory(c)} style={styles.histBtn}>History</button>
                 </div>
                 <div style={styles.cardBody}>
                   <div style={styles.cardRow}><span>Loan Amount:</span> <strong>₹{c.totalLoanAmount}</strong></div>
@@ -366,7 +338,7 @@ const Dashboard = () => {
                 <div style={styles.cardActions}>
                   <button onClick={() => handleCollect(c._id || c.id)} style={{...styles.payBtn, flex: 1}}>Collect</button>
                   <button onClick={() => downloadPDF(c)} style={styles.pdfBtn}>PDF</button>
-                  <button onClick={() => handleAddPenalty(c._id || c.id)} style={styles.penaltyBtn}>⚠️ Penalty</button>
+                  <button onClick={() => handleAddPenalty(c._id || c.id)} style={styles.penaltyBtn}>Penalty</button>
                   <button onClick={() => handleDelete(c._id || c.id)} style={styles.delBtn}>Delete</button>
                 </div>
               </div>
@@ -391,7 +363,7 @@ const Dashboard = () => {
                 <tr key={c._id || c.id}>
                   <td style={styles.td}>
                     {c.clientName} 
-                    <button onClick={() => setSelectedClientHistory(c)} style={styles.histBtn}>⏱️ History</button>
+                    <button onClick={() => setSelectedClientHistory(c)} style={styles.histBtn}>History</button>
                   </td>
                   <td style={styles.td}>₹{c.totalLoanAmount}</td>
                   <td style={styles.td}>₹{c.totalReturnAmount || c.totalLoanAmount}</td>
@@ -402,7 +374,7 @@ const Dashboard = () => {
                   <td style={styles.td}>
                     <button onClick={() => handleCollect(c._id || c.id)} style={styles.payBtn}>Collect</button>
                     <button onClick={() => downloadPDF(c)} style={styles.pdfBtn}>PDF</button>
-                    <button onClick={() => handleAddPenalty(c._id || c.id)} style={styles.penaltyBtn}>⚠️ Penalty</button>
+                    <button onClick={() => handleAddPenalty(c._id || c.id)} style={styles.penaltyBtn}>Penalty</button>
                     <button onClick={() => handleDelete(c._id || c.id)} style={styles.delBtn}>Delete</button>
                   </td>
                 </tr>
@@ -452,11 +424,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {userRole === 'super_admin' && (
+      {userRole === 'admin' && (
         <div style={{ marginTop: '40px', background: '#1e293b', padding: '20px', borderRadius: '10px' }}>
-          <h3 style={{ color: '#60a5fa', marginBottom: '15px' }}>👑 Super Admin Control Panel (User Management)</h3>
+          <h3 style={{ color: '#60a5fa', marginBottom: '15px' }}>Super Admin Control Panel</h3>
           {adminLoading ? (
-            <p style={{ color: '#94a3b8' }}>Loading users...</p>
+            <p style={{ color: '#94a3b8' }}>Loading requests...</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
@@ -471,7 +443,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {allUsers.map((u) => (
+                  {allUsers.length > 0 ? allUsers.map((u) => (
                     <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
                       <td style={{ padding: '12px' }}>{u.name}</td>
                       <td style={{ padding: '12px' }}>{u.email}</td>
@@ -479,30 +451,27 @@ const Dashboard = () => {
                         <span style={{ background: '#334155', padding: '3px 8px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span>
                       </td>
                       <td style={{ padding: '12px', color: u.isApproved ? '#10b981' : '#f59e0b', fontWeight: 'bold' }}>
-                        {u.isApproved ? 'Approved ✅' : 'Pending ⏳'}
+                        {u.isApproved ? 'Approved' : 'Pending'}
                       </td>
                       <td style={{ padding: '12px', color: u.paymentStatus === 'Paid' ? '#10b981' : '#f87171', fontWeight: 'bold' }}>
                         {u.paymentStatus}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        {(!u.isApproved || u.paymentStatus !== 'Paid') ? (
-                          <button 
-                            onClick={() => handleApproveAndPay(u._id)}
-                            style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                          >
-                            Approve & Mark Paid
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => handleBlockUser(u._id)}
-                            style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                          >
-                            Block User 🚫
-                          </button>
-                        )}
+                        <button 
+                          onClick={() => handleApproveAndPay(u._id)}
+                          style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginRight: '10px' }}
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          onClick={() => handleBlockUser(u._id)}
+                          style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                          Block
+                        </button>
                       </td>
                     </tr>
-                  ))}
+                  )) : <tr><td colSpan="6" style={{ padding: '12px', color: '#94a3b8', textAlign: 'center' }}>No pending approval notifications.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -520,7 +489,7 @@ const Dashboard = () => {
                 <ul style={{listStyleType: 'none', padding: 0}}>
                   {selectedClientHistory.history.map((h, index) => (
                     <li key={index} style={styles.historyItem}>
-                      <span>📅 {new Date(h.date).toLocaleString('en-US')}</span>
+                      <span>{new Date(h.date).toLocaleString('en-US')}</span>
                       <strong style={{color: '#10b981'}}> ₹{h.amount}</strong>
                     </li>
                   ))}

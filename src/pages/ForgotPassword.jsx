@@ -13,7 +13,7 @@ const ForgotPassword = () => {
   const handleReset = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.put('/auth/forgot-password', { 
+      const res = await API.put('/api/forgot-password', { 
         email, 
         securityAnswer1, 
         securityAnswer2, 
