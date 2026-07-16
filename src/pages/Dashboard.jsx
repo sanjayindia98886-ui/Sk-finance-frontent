@@ -45,24 +45,26 @@ const Dashboard = () => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
-      try {
-        const profileRes = await API.get('/api/profile');
-        setUserRole(profileRes.data.role);
-        
-        if (profileRes.data.companyName) {
-          setCompanyName(profileRes.data.companyName);
-        }
-        
-        if (profileRes.data.role === 'admin') {
-          loadAllUsersForAdmin();
-        }
+    try {
+  const profileRes = await API.get('/api/profile');
+  const userData = profileRes.data.user || profileRes.data;
 
-        const res = await API.get('/clients/all');
-        setClients(res.data.clients || []);
-        setStats(res.data.stats || { totalOutflow: 0, totalInflow: 0, netProfit: 0, totalPending: 0 });
-      } catch (err) {
-        console.error("Data fetch error", err);
-      }
+  setUserRole(userData.role);
+
+  if (userData.companyName) {
+    setCompanyName(userData.companyName);
+  } else {
+    setCompanyName('sp-finance');
+  }
+  
+  if (userData.role === 'admin') {
+    loadAllUsersForAdmin();
+  }
+
+  const res = await API.get('/clients/all');
+  setClients(res.data.clients || []);
+  setStats(res.data.stats || { totalOutflow: 0, totalInflow: 0, netProfit: 0, totalPending: 0 });
+}
     };
     fetchData();
   }, [navigate]);
