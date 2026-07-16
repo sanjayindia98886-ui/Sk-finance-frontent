@@ -45,26 +45,28 @@ const Dashboard = () => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
-    try {
-  const profileRes = await API.get('/api/profile');
-  const userData = profileRes.data.user || profileRes.data;
+      try {
+        const profileRes = await API.get('/api/profile');
+        const userData = profileRes.data.user || profileRes.data;
 
-  setUserRole(userData.role);
+        setUserRole(userData.role);
 
-  if (userData.companyName) {
-    setCompanyName(userData.companyName);
-  } else {
-    setCompanyName('sp-finance');
-  }
-  
-  if (userData.role === 'admin') {
-    loadAllUsersForAdmin();
-  }
+        if (userData.companyName) {
+          setCompanyName(userData.companyName);
+        } else {
+          setCompanyName('sp-finance');
+        }
+        
+        if (userData.role === 'admin') {
+          loadAllUsersForAdmin();
+        }
 
-  const res = await API.get('/clients/all');
-  setClients(res.data.clients || []);
-  setStats(res.data.stats || { totalOutflow: 0, totalInflow: 0, netProfit: 0, totalPending: 0 });
-}
+        const res = await API.get('/clients/all');
+        setClients(res.data.clients || []);
+        setStats(res.data.stats || { totalOutflow: 0, totalInflow: 0, netProfit: 0, totalPending: 0 });
+      } catch (err) {
+        console.error("Data fetch error", err);
+      }
     };
     fetchData();
   }, [navigate]);
@@ -81,33 +83,25 @@ const Dashboard = () => {
     }
   };
 
-  const handleApproveAndPay = async (userId) => {
+  const handleAdminAction = async (userId, action) => {
     try {
-      await API.post('/api/admin/action', {
-        userId: userId,
-        action: 'approve'
-      });
+      await API.post('/api/admin/action', { userId, action });
+      alert('User status updated successfully!');
       
-      alert('User successfully approved!');
-      loadAllUsersForAdmin(); 
-    } catch (err) {
-      alert('Update failed: ' + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const handleBlockUser = async (userId) => {
-    if (window.confirm("Are you sure you want to block this user's access?")) {
-        try {
-            await API.post('/api/admin/action', {
-                userId: userId,
-                action: 'block'
-            });
-            
-            alert('User access blocked successfully!');
-            loadAllUsersForAdmin(); 
-        } catch (err) {
-            alert('Block failed: ' + (err.response?.data?.message || err.message));
+      setAllUsers(allUsers.map(u => {
+        if (u._id === userId) {
+          return {
+            ...u,
+            isApproved: action === 'approve',
+            status: action === 'block' ? 'blocked' : 'active',
+            isBlocked: action === 'block'
+          };
         }
+        return u;
+      }));
+    } catch (error) {
+      console.error('Admin action failed:', error);
+      alert(error.response?.data?.message || 'Action failed');
     }
   };
 
@@ -207,7 +201,7 @@ const Dashboard = () => {
 
   const handleAddPenalty = async (id) => {
     if (!id || id === 'undefined') { alert("Invalid Client ID."); return; }
-    const amount = prompt("Enter penalty amount (₹):");
+    const amount = prompt("Enter penalty amount (Rs.):");
     if (!amount) return;
     const reason = prompt("Enter reason for penalty:", "Late Installment");
     if (reason === null) return; 
@@ -242,7 +236,7 @@ const Dashboard = () => {
    <div style={styles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-          <h2 style={{ margin: 0 }}>{companyName ||'Loading...'}</h2>
+          <h2 style={{ margin: 0 }}>{companyName || 'Loading...'}</h2>
           <button 
             onClick={handleEditCompanyName}
             style={{ marginLeft: '15px', background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
@@ -432,75 +426,79 @@ const Dashboard = () => {
           {adminLoading ? (
             <p style={{ color: '#94a3b8' }}>Loading requests...</p>
           ) : (
-          <div style={{ overflowX: 'auto' }}>
-  <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
-    <thead>
-      <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
-        <th style={{ padding: '12px' }}>Name</th>
-        <th style={{ padding: '12px' }}>Email</th>
-        <th style={{ padding: '12px' }}>Role</th>
-        <th style={{ padding: '12px' }}>Approval Status</th>
-        <th style={{ padding: '12px' }}>Payment Status</th>
-        <th style={{ padding: '12px' }}>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {allUsers.length > 0 && allUsers.filter(u => u.status !== 'blocked' && !u.isBlocked).map((u) => (
-        <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
-          <td style={{ padding: '12px' }}>{u.name}</td>
-          <td style={{ padding: '12px' }}>{u.email}</td>
-          <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
-          <td style={{ padding: '12px', color: u.isApproved ? '#4ade80' : '#f87171' }}>{u.isApproved ? 'Approved' : 'Pending'}</td>
-          <td style={{ padding: '12px', color: '#4ade80' }}>{u.paymentStatus}</td>
-          <td style={{ padding: '12px' }}>
-            {!u.isApproved && (
-              <button onClick={() => handleAdminAction(u._id, 'approve')} style={{ background: '#22c55e', color: '#fff', marginRight: '8px', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Approve ✅</button>
-            )}
-            <button onClick={() => handleAdminAction(u._id, 'block')} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Block</button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+            <div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
+                      <th style={{ padding: '12px' }}>Name</th>
+                      <th style={{ padding: '12px' }}>Email</th>
+                      <th style={{ padding: '12px' }}>Role</th>
+                      <th style={{ padding: '12px' }}>Approval Status</th>
+                      <th style={{ padding: '12px' }}>Payment Status</th>
+                      <th style={{ padding: '12px' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allUsers.length > 0 && allUsers.filter(u => u.status !== 'blocked' && !u.isBlocked).map((u) => (
+                      <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
+                        <td style={{ padding: '12px' }}>{u.name}</td>
+                        <td style={{ padding: '12px' }}>{u.email}</td>
+                        <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
+                        <td style={{ padding: '12px', color: u.isApproved ? '#4ade80' : '#f87171' }}>{u.isApproved ? 'Approved' : 'Pending'}</td>
+                        <td style={{ padding: '12px', color: '#4ade80' }}>{u.paymentStatus}</td>
+                        <td style={{ padding: '12px' }}>
+                          {!u.isApproved && (
+                            <button onClick={() => handleAdminAction(u._id, 'approve')} style={{ background: '#22c55e', color: '#fff', marginRight: '8px', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Approve ✅</button>
+                          )}
+                          <button onClick={() => handleAdminAction(u._id, 'block')} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>Block</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-{/* 🚫 ब्लॉक किए गए यूजर्स की नई टेबल (डार्क थीम मैचिंग) */}
-<div style={{ marginTop: '30px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
-  <h3 style={{ color: '#ef4444', marginBottom: '15px' }}>Blocked Users (ब्लॉक किए गए खाते)</h3>
-  {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).length === 0 ? (
-    <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No blocked users found.</p>
-  ) : (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
-            <th style={{ padding: '12px' }}>Name</th>
-            <th style={{ padding: '12px' }}>Email</th>
-            <th style={{ padding: '12px' }}>Role</th>
-            <th style={{ padding: '12px' }}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).map((u) => (
-            <tr key={u._id} style={{ borderBottom: '1px solid #334155', background: '#2d1f2d' }}>
-              <td style={{ padding: '12px' }}>{u.name}</td>
-              <td style={{ padding: '12px' }}>{u.email}</td>
-              <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
-              <td style={{ padding: '12px' }}>
-                <button 
-                  onClick={() => handleAdminAction(u._id, 'approve')}
-                  style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                  Unblock Account
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+              <div style={{ marginTop: '30px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
+                <h3 style={{ color: '#ef4444', marginBottom: '15px' }}>Blocked Users (ब्लॉक किए गए खाते)</h3>
+                {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).length === 0 ? (
+                  <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No blocked users found.</p>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', color: '#fff' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '2px solid #334155', textAlign: 'left', color: '#94a3b8' }}>
+                          <th style={{ padding: '12px' }}>Name</th>
+                          <th style={{ padding: '12px' }}>Email</th>
+                          <th style={{ padding: '12px' }}>Role</th>
+                          <th style={{ padding: '12px' }}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).map((u) => (
+                          <tr key={u._id} style={{ borderBottom: '1px solid #334155', background: '#2d1f2d' }}>
+                            <td style={{ padding: '12px' }}>{u.name}</td>
+                            <td style={{ padding: '12px' }}>{u.email}</td>
+                            <td style={{ padding: '12px' }}><span style={{ background: '#334155', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{u.role}</span></td>
+                            <td style={{ padding: '12px' }}>
+                              <button 
+                                onClick={() => handleAdminAction(u._id, 'approve')}
+                                style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+                              >
+                                Unblock Account
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedClientHistory && (
         <div style={styles.modalOverlay}>
