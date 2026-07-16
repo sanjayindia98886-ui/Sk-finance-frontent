@@ -26,7 +26,7 @@ const Dashboard = () => {
   const [allUsers, setAllUsers] = useState([]); 
   const [adminLoading, setAdminLoading] = useState(true);
 
-  const [companyName, setCompanyName] = useState('Anndata Agri Trading Company'); 
+  const [companyName, setCompanyName] = useState(''); 
   const [currentFilter, setCurrentFilter] = useState('All'); 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; 
@@ -240,7 +240,7 @@ const Dashboard = () => {
    <div style={styles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px', borderBottom: '1px solid #1e293b', paddingBottom: '15px' }}>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-          <h2 style={{ margin: 0 }}>{companyName}</h2>
+          <h2 style={{ margin: 0 }}>{companyName ||'Loading...'}</h2>
           <button 
             onClick={handleEditCompanyName}
             style={{ marginLeft: '15px', background: '#3b82f6', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
