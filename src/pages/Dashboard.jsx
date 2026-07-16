@@ -440,7 +440,7 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {allUsers.length > 0 && allUsers.filter(u => u.status !== 'blocked' && !u.isBlocked).map((u) => (
+{allUsers.length > 0 && allUsers.filter(u => u.status !== 'blocked' && u.isBlocked !== true).map((u) => (
                       <tr key={u._id} style={{ borderBottom: '1px solid #334155' }}>
                         <td style={{ padding: '12px' }}>{u.name}</td>
                         <td style={{ padding: '12px' }}>{u.email}</td>
@@ -461,7 +461,7 @@ const Dashboard = () => {
 
               <div style={{ marginTop: '30px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
                 <h3 style={{ color: '#ef4444', marginBottom: '15px' }}>Blocked Users (ब्लॉक किए गए खाते)</h3>
-                {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).length === 0 ? (
+                {allUsers.filter(u => u.status === 'blocked' || u.isBlocked === true).length === 0 ? (
                   <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No blocked users found.</p>
                 ) : (
                   <div style={{ overflowX: 'auto' }}>
@@ -475,7 +475,7 @@ const Dashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {allUsers.filter(u => u.status === 'blocked' || u.isBlocked).map((u) => (
+                        {allUsers.filter(u => u.status === 'blocked' || u.isBlocked === true).map((u) => (
                           <tr key={u._id} style={{ borderBottom: '1px solid #334155', background: '#2d1f2d' }}>
                             <td style={{ padding: '12px' }}>{u.name}</td>
                             <td style={{ padding: '12px' }}>{u.email}</td>
