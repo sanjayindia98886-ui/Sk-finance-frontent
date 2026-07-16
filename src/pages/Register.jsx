@@ -25,8 +25,19 @@ const Register = () => {
     setError('');
     setSuccess('');
 
+    const dataToSend = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      securityQuestion1: formData.securityAnswer1,
+      securityQuestion2: formData.securityAnswer2,
+      securityAnswer1: formData.securityAnswer1,
+      securityAnswer2: formData.securityAnswer2
+    };
+
     try {
-      await API.post('/auth/register', formData);
+      await API.post('/auth/register', dataToSend);
       setSuccess('Registration Successful!');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
