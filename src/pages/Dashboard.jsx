@@ -457,12 +457,16 @@ const Dashboard = () => {
                         {u.paymentStatus}
                       </td>
                       <td style={{ padding: '12px' }}>
-                        <button 
-                          onClick={() => handleApproveAndPay(u._id)}
-                          style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginRight: '10px' }}
-                        >
-                          Approve
-                        </button>
+                        {!u.isApproved ? (
+                          <button 
+                            onClick={() => handleApproveAndPay(u._id)}
+                            style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginRight: '10px' }}
+                          >
+                            Approve
+                          </button>
+                        ) : (
+                          <span style={{ color: '#10b981', fontWeight: 'bold', marginRight: '10px' }}>Approved ✅</span>
+                        )}
                         <button 
                           onClick={() => handleBlockUser(u._id)}
                           style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
