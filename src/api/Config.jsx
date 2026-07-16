@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'https://sk-financ.onrender.com/api',
+    baseURL: 'https://sk-financ.onrender.com/',
     withCredentials: true
 });
 
