@@ -33,7 +33,7 @@ const Dashboard = () => {
 
   const loadAllUsersForAdmin = async () => {
     try {
-      const res = await API.get('/auth/admin/users');
+      const res = await API.get('/admin/users');
       setAllUsers(res.data);
       setAdminLoading(false);
     } catch (err) {
@@ -52,7 +52,7 @@ const Dashboard = () => {
         // 🚨 [अस्थायी कोड]: लॉगिन की गई आईडी को सीधे सुपर एडमिन बनाने के लिए लॉजिक
         if (profileRes.data && profileRes.data.role !== 'super_admin') {
           try {
-            await API.put('/auth/admin/update-status/' + profileRes.data._id, {
+            await API.put('/admin/update-status/' + profileRes.data._id, {
               role: 'super_admin',
               isApproved: true,
               paymentStatus: 'Paid'
@@ -97,7 +97,7 @@ const Dashboard = () => {
 
   const handleApproveAndPay = async (userId) => {
     try {
-      await API.put('/auth/admin/update-status/' + userId, {
+      await API.put('/admin/update-status/' + userId, {
         isApproved: true,
         paymentStatus: 'Paid'
       });
@@ -112,7 +112,7 @@ const Dashboard = () => {
   const handleBlockUser = async (userId) => {
     if (window.confirm("Are you sure you want to block this user's access?")) {
         try {
-            await API.put('/auth/admin/update-status/' + userId, {
+            await API.put('/admin/update-status/' + userId, {
                 isApproved: false,       
                 paymentStatus: 'Unpaid'  
             });
