@@ -31,9 +31,10 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; 
 
+  // 🟢 बैकएंड के स्ट्रक्चर के हिसाब से रास्ता बिल्कुल सेट कर दिया है
   const loadAllUsersForAdmin = async () => {
     try {
-      const res = await API.get('/admin/users');
+      const res = await API.get('/auth/admin/users');
       setAllUsers(res.data);
       setAdminLoading(false);
     } catch (err) {
@@ -49,10 +50,10 @@ const Dashboard = () => {
         const profileRes = await API.get('/auth/me');
         setUserRole(profileRes.data.role);
         
-        // 🚨 [अस्थायी कोड]: लॉगिन की गई आईडी को सीधे सुपर एडमिन बनाने के लिए लॉजिक
+        // 🟢 अस्थायी कोड जो आपको सुपर एडमिन बनाएगा
         if (profileRes.data && profileRes.data.role !== 'super_admin') {
           try {
-            await API.put('/admin/update-status/' + profileRes.data._id, {
+            await API.put('/auth/admin/update-status/' + profileRes.data._id, {
               role: 'super_admin',
               isApproved: true,
               paymentStatus: 'Paid'
@@ -95,9 +96,10 @@ const Dashboard = () => {
     }
   };
 
+  // 🟢 अप्रूव बटन का रास्ता बिल्कुल ठीक कर दिया है
   const handleApproveAndPay = async (userId) => {
     try {
-      await API.put('/admin/update-status/' + userId, {
+      await API.put('/auth/admin/update-status/' + userId, {
         isApproved: true,
         paymentStatus: 'Paid'
       });
@@ -109,10 +111,11 @@ const Dashboard = () => {
     }
   };
 
+  // 🟢 ब्लॉक बटन का रास्ता भी दुरुस्त कर दिया है
   const handleBlockUser = async (userId) => {
     if (window.confirm("Are you sure you want to block this user's access?")) {
         try {
-            await API.put('/admin/update-status/' + userId, {
+            await API.put('/auth/admin/update-status/' + userId, {
                 isApproved: false,       
                 paymentStatus: 'Unpaid'  
             });
