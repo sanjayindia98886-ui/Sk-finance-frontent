@@ -28,7 +28,7 @@ const Login = () => {
       alert('Login Successful!');
       
       if (userRole === 'admin') {
-        navigate('/admin-dashboard');
+        navigate('/dashboard');
       } else {
         navigate('/dashboard');
       }
@@ -102,4 +102,4 @@ const styles = {
   link: { color: '#60a5fa', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }
 };
 
-export default Login;
+export default Login;fix
