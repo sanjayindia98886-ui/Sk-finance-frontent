@@ -12,7 +12,7 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -22,10 +22,16 @@ const Login = () => {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('name', response.data.user?.name || ''); 
       
+      const userRole = response.data.user?.role || 'user';
+      localStorage.setItem('role', userRole);
+      
       alert('Login Successful!');
       
-      // 🚨 [अस्थायी बाईपास]: सीधे डैशबोर्ड पर भेज रहे हैं
-      navigate('/dashboard');
+      if (userRole === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
 
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Invalid email or password.';
